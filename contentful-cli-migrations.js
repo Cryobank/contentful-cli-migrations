@@ -284,8 +284,8 @@ async function createFirstMigration(parsedArguments) {
 
   const data =
     'module.exports = async function (migration, context) {\n' +
-    "    const versionTrackingContentType = migration.createContentType('versionTracking', {\n" +
-    "        name: 'Version Tracking',\n" +
+    "    const versionTrackingContentType = migration.createContentType('migrationVersionTracker', {\n" +
+    "        name: 'Migration Version Tracker',\n" +
     "        displayField: 'entryName'\n" +
     '    })\n' +
     '\n' +
@@ -331,14 +331,14 @@ async function createCounterEntry(environmentSingleton) {
 
     const defaultLocale = await lib.getDefaultLocale(environmentSingleton)
     const counterEntry = await environmentSingleton.createEntry(
-      'versionTracking',
+      'migrationVersionTracker',
       {
         fields: {
           entryName: {
             [defaultLocale.code]: 'Migration-Version-Tracker-DO-NOT-DELETE'
           },
           version: {
-            [defaultLocale.code]: '1'
+            [defaultLocale.code]: 1
           }
         }
       }
