@@ -4,7 +4,7 @@ const PLACEHOLDER_MANAGEMENT_TOKEN = 'placeholder-management-token'
 const PLACEHOLDER_SPACE_ID = 'placeholder-space-id'
 const DEFAULT_MIGRATIONS_DIR = 'migrations/scripts/'
 const DEFAULT_LOCALE = 'en-US'
-const DEFAULT_FIRST_MIGRATION = '0001-create-counter-content-type.cjs'
+const DEFAULT_FIRST_MIGRATION = '0001-init.cjs'
 
 ;(async function main() {
   try {
@@ -283,14 +283,14 @@ async function createFirstMigration(parsedArguments) {
 
   const data =
     'module.exports = async function (migration, context) {\n' +
-    "    const keyValueStore = migration.createContentType('keyValue', {\n" +
-    "        name: 'Key-Value',\n" +
-    "        displayField: 'key'\n" +
+    "    const versionTrackingContentType = migration.createContentType('versionTracking', {\n" +
+    "        name: 'Version Tracking',\n" +
+    "        displayField: 'entryName'\n" +
     '    })\n' +
     '\n' +
-    '    keyValueStore\n' +
-    "        .createField('key')\n" +
-    "        .name('key')\n" +
+    '    versionTrackingContentType\n' +
+    "        .createField('entryName')\n" +
+    "        .name('Entry Name')\n" +
     "        .type('Symbol')\n" +
     '        .localized(false)\n' +
     '        .required(true)\n' +
@@ -302,15 +302,17 @@ async function createFirstMigration(parsedArguments) {
     '        .disabled(false)\n' +
     '        .omitted(false)\n' +
     '\n' +
-    '    keyValueStore\n' +
-    "        .createField('value')\n" +
-    "        .name('value')\n" +
-    "        .type('Symbol')\n" +
-    '        .localized(true)\n' +
-    '        .required(false)\n' +
+    '    versionTrackingContentType\n' +
+    "        .createField('version')\n" +
+    "        .name('Version')\n" +
+    "        .type('Integer')\n" +
+    '        .required(true)\n' +
     '        .validations([])\n' +
-    '        .disabled(false)\n' +
+    '        .disabled(true)\n' +
     '        .omitted(false)\n' +
+    '\n' +
+    '    versionTrackingContentType\n' +
+    "        .changeFieldControl('version', 'builtin', 'numberEditor', {})\n" +
     '}'
 
   fileSystem.writeFileSync(firstMigrationName, data)
@@ -327,23 +329,26 @@ async function createCounterEntry(environmentSingleton) {
     const lib = await import('contentful-lib-helpers')
 
     const defaultLocale = await lib.getDefaultLocale(environmentSingleton)
-    const counterEntry = await environmentSingleton.createEntry('keyValue', {
-      fields: {
-        key: {
-          [defaultLocale.code]: 'Counter-DO-NOT-DELETE'
-        },
-        value: {
-          [defaultLocale.code]: '1'
+    const counterEntry = await environmentSingleton.createEntry(
+      'versionTracking',
+      {
+        fields: {
+          entryName: {
+            [defaultLocale.code]: 'Migration-Version-Tracker-DO-NOT-DELETE'
+          },
+          version: {
+            [defaultLocale.code]: '1'
+          }
         }
       }
-    })
+    )
 
     console.log('##/INFO: We created the Counter entry for you.')
     console.log(
       '##/INFO: Please write these values in your .env/.env.local file.'
     )
     console.log('CMS_MIGRATIONS_COUNTER_ID=' + counterEntry?.sys?.id)
-    console.log('CMS_MIGRATIONS_COUNTER_FIELD=value')
+    console.log('CMS_MIGRATIONS_COUNTER_FIELD=version')
     console.log('CMS_MIGRATIONS_COUNTER_LOCALE=' + defaultLocale.code)
   } catch (error) {
     console.error('@@/ERROR:', error)
