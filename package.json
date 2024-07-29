@@ -1,9 +1,9 @@
 {
-  "name": "contentful-cli-migrations",
+  "name": "cooper-contentful-cli-migrations",
   "version": "0.3.4",
   "type": "module",
   "description": "Contentful CLI Migration Tool",
-  "homepage": "https://github.com/AtidaTech/contentful-cli-migrations",
+  "homepage": "https://github.com/Cryobank/contentful-cli-migrations",
   "keywords": [
     "cli",
     "contentful",
@@ -26,13 +26,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/AtidaTech/contentful-cli-migrations.git"
+    "url": "https://github.com/Cryobank/contentful-cli-migrations"
   },
   "author": "Atida <hello@atida.com>",
   "license": "MIT",
   "scripts": {
     "lint": "node_modules/eslint/bin/eslint.js --resolve-plugins-relative-to ./ --ext js,mjs,cjs,jsx,ts,tsx ./contentful-cli-migrations.js",
-    "lint-fix": "node_modules/eslint/bin/eslint.js --resolve-plugins-relative-to ./ --ext js,mjs,cjs,jsx,ts,tsx ./contentful-cli-migrations.js --fix"
+    "lint-fix": "node_modules/eslint/bin/eslint.js --resolve-plugins-relative-to ./ --ext js,mjs,cjs,jsx,ts,tsx ./contentful-cli-migrations.js --fix",
+    "pub": "npm version patch --force && npm publish"
   },
   "dependencies": {
     "async": "^3.2.2",
