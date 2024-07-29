@@ -33,7 +33,7 @@
   "scripts": {
     "lint": "node_modules/eslint/bin/eslint.js --resolve-plugins-relative-to ./ --ext js,mjs,cjs,jsx,ts,tsx ./contentful-cli-migrations.js",
     "lint-fix": "node_modules/eslint/bin/eslint.js --resolve-plugins-relative-to ./ --ext js,mjs,cjs,jsx,ts,tsx ./contentful-cli-migrations.js --fix",
-    "pub": "npm version patch --force && npm publish"
+    "pub": "npm version patch && npm publish"
   },
   "dependencies": {
     "async": "^3.2.2",
