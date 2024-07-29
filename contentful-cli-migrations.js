@@ -61,8 +61,8 @@ const DEFAULT_FIRST_MIGRATION = '0001-init.cjs'
  * @param {string} localWorkingDir - The directory path where the library is located.
  * @param {string} scriptDirectory - The directory path where the script is running.
  * @return {Promise<object>} The environment values.
- * @property {string} CMS_MANAGEMENT_TOKEN - The CMA token for Contentful.
- * @property {string} CMS_SPACE_ID - The Space ID.
+ * @property {string} CONTENTFUL_CMA_TOKEN - The CMA token for Contentful.
+ * @property {string} CONTENTFUL_SPACE_ID - The Space ID.
  * @property {string} CMS_MIGRATIONS_DIR - The folder where the migration scripts are.
  * @property {string} CMS_MIGRATIONS_COUNTER_ID - The entry-id used for the counter
  * @property {string} CMS_MIGRATIONS_COUNTER_FIELD - The field in that entry that will store the actual counter
@@ -92,8 +92,8 @@ async function getEnvValues(localWorkingDir, scriptDirectory) {
  *
  * @param {string} rootFolder - The directory path where the .env files are located.
  * @param {Object} envValues - The .env values loaded.
- * @property {string} envValues.CMS_MANAGEMENT_TOKEN - The CMA token for Contentful.
- * @property {string} envValues.CMS_SPACE_ID - The Space ID.
+ * @property {string} envValues.CONTENTFUL_CMA_TOKEN - The CMA token for Contentful.
+ * @property {string} envValues.CONTENTFUL_SPACE_ID - The Space ID.
  * @property {string} envValues.CMS_MIGRATIONS_DIR - The folder where the migration scripts are.
  * @property {string} envValues.CMS_MIGRATIONS_COUNTER_ID - The entry-id used for the counter
  * @property {string} envValues.CMS_MIGRATIONS_COUNTER_FIELD - The field in that entry that will store the actual counter
@@ -118,9 +118,10 @@ async function parseArguments(rootFolder, envValues) {
   await checkArgs(parsedArguments)
 
   const {
-    'space-id': spaceId = envValues?.CMS_SPACE_ID ?? PLACEHOLDER_SPACE_ID,
+    'space-id': spaceId = envValues?.CONTENTFUL_SPACE_ID ??
+      PLACEHOLDER_SPACE_ID,
     'management-token': managementToken = parsedArguments['mt'] ??
-      envValues?.CMS_MANAGEMENT_TOKEN ??
+      envValues?.CONTENTFUL_CMA_TOKEN ??
       PLACEHOLDER_MANAGEMENT_TOKEN,
     'counter-id': counterEntryId = envValues?.CMS_MIGRATIONS_COUNTER_ID,
     'counter-field': counterFieldId = envValues?.CMS_MIGRATIONS_COUNTER_FIELD,
