@@ -5,6 +5,7 @@ const PLACEHOLDER_SPACE_ID = 'placeholder-space-id'
 const DEFAULT_MIGRATIONS_DIR = 'migrations/scripts/'
 const DEFAULT_LOCALE = 'en-US'
 const DEFAULT_FIRST_MIGRATION = '0001-init.cjs'
+const path = await import('path')
 
 ;(async function main() {
   try {
@@ -282,39 +283,44 @@ async function createFirstMigration(parsedArguments) {
   const firstMigrationName =
     parsedArguments?.rootDestinationFolder + DEFAULT_FIRST_MIGRATION
 
-  const data =
-    'module.exports = async function (migration, context) {\n' +
-    "    const versionTrackingContentType = migration.createContentType('migrationVersionTracker', {\n" +
-    "        name: 'Migration Version Tracker',\n" +
-    "        displayField: 'entryName'\n" +
-    '    })\n' +
-    '\n' +
-    '    versionTrackingContentType\n' +
-    "        .createField('entryName')\n" +
-    "        .name('Entry Name')\n" +
-    "        .type('Symbol')\n" +
-    '        .localized(false)\n' +
-    '        .required(true)\n' +
-    '        .validations([\n' +
-    '            {\n' +
-    '                "unique": true\n' +
-    '            }\n' +
-    '        ])\n' +
-    '        .disabled(false)\n' +
-    '        .omitted(false)\n' +
-    '\n' +
-    '    versionTrackingContentType\n' +
-    "        .createField('version')\n" +
-    "        .name('Version')\n" +
-    "        .type('Integer')\n" +
-    '        .required(true)\n' +
-    '        .validations([])\n' +
-    '        .disabled(true)\n' +
-    '        .omitted(false)\n' +
-    '\n' +
-    '    versionTrackingContentType\n' +
-    "        .changeFieldControl('version', 'builtin', 'numberEditor', {})\n" +
-    '}'
+  const data = `module.exports = {
+		up: async function (migration, context) {
+			const versionTrackingContentType = migration.createContentType('migrationVersionTracker', {
+				name: 'Migration Version Tracker',
+				displayField: 'entryName'
+			})
+	
+			versionTrackingContentType
+				.createField('entryName')
+				.name('Entry Name')
+				.type('Symbol')
+				.localized(false)
+				.required(true)
+				.validations([
+					{
+						"unique": true
+					}
+				])
+				.disabled(false)
+				.omitted(false)
+	
+			versionTrackingContentType
+				.createField('version')
+				.name('Version')
+				.type('Integer')
+				.required(true)
+				.validations([])
+				.disabled(true)
+				.omitted(false)
+	
+			versionTrackingContentType
+				.changeFieldControl('version', 'builtin', 'numberEditor', {})
+		},
+	
+		down: async function (migration, context) {
+			migration.deleteContentType('migrationVersionTracker')
+		}
+	}`
 
   fileSystem.writeFileSync(firstMigrationName, data)
 }
@@ -542,7 +548,11 @@ async function performMigrations(
   // Loop and run migrations
   await customAsync.eachSeries(
     migrationArray,
-    function (migrationScript, callback) {
+    async function (migrationScript, callback) {
+      const migrationModule = await import(
+        path.resolve(folderMigrationScript + migrationScript)
+      )
+
       let options = {
         spaceId: parsedArguments?.spaceId,
         environmentId: environmentSingleton?.sys?.id,
@@ -564,47 +574,45 @@ async function performMigrations(
         console.error('@@/ERROR: ' + folderMigrationScript + migrationScript)
         process.exit(1)
       }
+      console.log(`##/INFO: Running migration ${migrationScript}`)
 
-      runMigration({
-        ...options,
-        ...{
-          filePath: path.resolve(folderMigrationScript + migrationScript)
-        }
-      })
-        .then(async () => {
-          console.log('##/INFO: Migration ' + migrationScript + ' Done!')
-
-          if (!parsedArguments?.shouldInitialise) {
-            // Update counter value
-            latestMigrationNumber++
-
-            // Write new Count into Entry
-            const fieldId = parsedArguments?.counterFieldId
-            const fieldLocale = parsedArguments?.counterLocale
-            const entrySavingCounter = await environmentSingleton.getEntry(
-              parsedArguments?.counterEntryId
-            )
-
-            entrySavingCounter.fields[fieldId][fieldLocale] =
-              `${latestMigrationNumber}`
-
-            entrySavingCounter
-              .update()
-              .then(callback())
-              .catch(e => console.error('@@/ERROR: ' + e))
-          } else {
-            await createCounterEntry(environmentSingleton)
-          }
+      try {
+        await runMigration({
+          migrationFunction: migrationModule.up,
+          context: { environmentSingleton, parsedArguments },
+          ...options
         })
-        .catch(e =>
-          console.error(
-            '@@/ERROR ' +
-              e +
-              ' - while running the migration: ' +
-              folderMigrationScript +
-              migrationScript
+
+        console.log('##/INFO: Migration ' + migrationScript + ' Done!')
+
+        if (!parsedArguments?.shouldInitialise) {
+          // Update counter value
+          latestMigrationNumber++
+
+          // Write new Count into Entry
+          const fieldId = parsedArguments?.counterFieldId
+          const fieldLocale = parsedArguments?.counterLocale
+          const entrySavingCounter = await environmentSingleton.getEntry(
+            parsedArguments?.counterEntryId
           )
+
+          entrySavingCounter.fields[fieldId][fieldLocale] =
+            `${latestMigrationNumber}`
+
+          await entrySavingCounter.update()
+          callback()
+        } else {
+          await createCounterEntry(environmentSingleton)
+        }
+      } catch (e) {
+        console.error(
+          '@@/ERROR ' +
+            e +
+            ' - while running the migration: ' +
+            folderMigrationScript +
+            migrationScript
         )
+      }
     }
   )
 }
