@@ -1,5 +1,5 @@
 {
-  "name": "cooper-contentful-cli-migrations",
+  "name": "@cooperco/contentful-cli-migrations",
   "version": "0.4.2",
   "type": "module",
   "description": "Contentful CLI Migration Tool",
